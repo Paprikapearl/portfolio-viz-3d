@@ -1,0 +1,45 @@
+{
+  "name": "@portfolio-viz/core",
+  "version": "0.1.0",
+  "description": "Core 3D visualization components for portfolio analytics",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "@react-three/fiber": "^8.15.0",
+    "@react-three/drei": "^9.92.0",
+    "@react-spring/three": "^9.7.3",
+    "three": "^0.160.0",
+    "zustand": "^4.4.7",
+    "d3-scale": "^4.0.2",
+    "d3-scale-chromatic": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.48",
+    "@types/three": "^0.160.0",
+    "@types/d3-scale": "^4.0.8",
+    "@types/d3-scale-chromatic": "^3.0.3",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}
