@@ -5,6 +5,8 @@
  * Portfolio → Asset Class → Region → Asset → Return Components
  */
 
+import type { GeographicRegion, LatLong, AssetClassType } from './particle';
+
 export interface DataNode {
   id: string;
   label: string;
@@ -13,6 +15,11 @@ export interface DataNode {
   weight?: number;      // Portfolio weight (0-1)
   children?: DataNode[];
   metadata?: Record<string, unknown>;
+
+  // Geographic data for particle visualization
+  region?: GeographicRegion;
+  latLong?: LatLong;
+  assetClassType?: AssetClassType;
 }
 
 /**

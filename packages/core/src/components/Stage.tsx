@@ -2,8 +2,9 @@
  * Stage - Animated-camera 3D scene for cinematic visualization
  *
  * Layout:
- * - Top area: Breadcrumb trail (horizontal bars)
- * - Middle area: Current selection options (vertical bars)
+ * - Level 0: Portfolio bars (preserved)
+ * - Levels 1-3: Particle visualization (galaxy, globe, nebula)
+ * - Level 4+: Exploded contribution view (preserved)
  * - Camera animates to new position after each selection
  */
 
@@ -13,20 +14,26 @@ import { PerspectiveCamera } from '@react-three/drei';
 import { useSpring } from '@react-spring/three';
 import * as THREE from 'three';
 import type { DataNode, HierarchyConfig } from '../types';
-import { useNavigationStore } from '../store';
+import { useNavigationStore, useVisualizationMode } from '../store';
+import { useFormationState } from '../store/particleStore';
 import { SelectionView } from './SelectionView';
 import { Breadcrumbs } from './Breadcrumbs';
+import { ParticleVisualization } from './ParticleVisualization';
 
 // Camera positions for different states
 const CAMERA_POSITIONS = {
   // Level 0: Overview - looking at vertical portfolio bars
   overview: { position: [0, 1.5, 10], lookAt: [0, 1, 0] },
-  // Level 1+: Drilled in - looking at horizontal bars
+  // Level 1+: Drilled in - looking at horizontal bars (legacy bar mode)
   drilled: { position: [1, 2, 8], lookAt: [0, 1.5, 0] },
   // Contribution mode: Slightly higher to see stacked bars
   contribution: { position: [1.5, 2.5, 9], lookAt: [0, 1.8, 0] },
   // Exploded view: Centered, looking at contribution blocks
   exploded: { position: [0, 2.5, 7], lookAt: [0, 2.5, 0] },
+  // Particle visualization camera positions
+  galaxy: { position: [0, 3, 15], lookAt: [0, 1, 0] },
+  globe: { position: [0, 2, 8], lookAt: [0, 1.5, 0] },
+  nebula: { position: [2, 1.5, 6], lookAt: [0, 1.5, 0] },
 } as const;
 
 interface StageProps {
@@ -45,21 +52,41 @@ function AnimatedCamera() {
   const currentLevel = useNavigationStore((s) => s.currentLevel);
   const viewMode = useNavigationStore((s) => s.viewMode);
   const explodedInstrumentId = useNavigationStore((s) => s.explodedInstrumentId);
+  const visualizationMode = useVisualizationMode();
+  const formationState = useFormationState();
 
-  // Determine target camera state based on level, view mode, and exploded state
+  // Determine target camera state based on level, view mode, and visualization mode
   const targetState = useMemo(() => {
     // Exploded view takes priority
     if (explodedInstrumentId) {
       return CAMERA_POSITIONS.exploded;
     }
+
+    // Level 0: Portfolio overview
     if (currentLevel === 0) {
       return CAMERA_POSITIONS.overview;
     }
+
+    // Particle visualization mode for levels 1-3
+    if (visualizationMode === 'particles' && currentLevel >= 1 && currentLevel <= 3) {
+      switch (formationState.currentFormation) {
+        case 'galaxy':
+          return CAMERA_POSITIONS.galaxy;
+        case 'globe':
+          return CAMERA_POSITIONS.globe;
+        case 'nebula':
+          return CAMERA_POSITIONS.nebula;
+        default:
+          return CAMERA_POSITIONS.galaxy;
+      }
+    }
+
+    // Bar visualization mode (legacy)
     if (viewMode === 'contribution') {
       return CAMERA_POSITIONS.contribution;
     }
     return CAMERA_POSITIONS.drilled;
-  }, [currentLevel, viewMode, explodedInstrumentId]);
+  }, [currentLevel, viewMode, explodedInstrumentId, visualizationMode, formationState.currentFormation]);
 
   // Animate camera position
   const { posX, posY, posZ, lookX, lookY, lookZ } = useSpring({
@@ -104,7 +131,21 @@ function Scene({
   onNodeSelect?: (node: DataNode, level: number) => void;
 }) {
   const explodedInstrumentId = useNavigationStore((s) => s.explodedInstrumentId);
+  const currentLevel = useNavigationStore((s) => s.currentLevel);
+  const visualizationMode = useVisualizationMode();
   const isExploded = !!explodedInstrumentId;
+
+  // Determine if we should show particle visualization
+  const showParticles = visualizationMode === 'particles' &&
+    currentLevel >= 1 &&
+    currentLevel <= 3 &&
+    !isExploded;
+
+  // Show bars for level 0, level 4+, or when in bar mode
+  const showBars = currentLevel === 0 ||
+    currentLevel > 3 ||
+    visualizationMode === 'bars' ||
+    isExploded;
 
   return (
     <>
@@ -116,8 +157,8 @@ function Scene({
       <directionalLight position={[5, 10, 7]} intensity={0.6} />
       <directionalLight position={[-5, 5, -5]} intensity={0.2} />
 
-      {/* Ground reference - hidden in exploded view */}
-      {!isExploded && (
+      {/* Ground reference - hidden in exploded view and particle mode */}
+      {!isExploded && !showParticles && (
         <mesh
           position={[0, -0.01, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
@@ -132,8 +173,8 @@ function Scene({
         </mesh>
       )}
 
-      {/* Subtle grid - hidden in exploded view */}
-      {!isExploded && (
+      {/* Subtle grid - hidden in exploded view and particle mode */}
+      {!isExploded && !showParticles && (
         <gridHelper
           args={[20, 20, '#1a1a2a', '#151520']}
           position={[0, 0.01, 0]}
@@ -143,8 +184,13 @@ function Scene({
       {/* Breadcrumbs (selected parents at top) - hidden in exploded view */}
       {!isExploded && <Breadcrumbs />}
 
-      {/* Main selection view */}
-      <SelectionView onNodeSelect={onNodeSelect} />
+      {/* Particle visualization for levels 1-3 */}
+      {showParticles && (
+        <ParticleVisualization onNodeSelect={onNodeSelect} />
+      )}
+
+      {/* Bar-based selection view for level 0 and exploded view */}
+      {showBars && <SelectionView onNodeSelect={onNodeSelect} />}
     </>
   );
 }

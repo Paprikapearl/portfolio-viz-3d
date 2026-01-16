@@ -33,9 +33,7 @@ function getReturnColor(value: number): string {
 
 // Layout constants - Value mode
 const VERTICAL_SPACING = 1.5;    // Horizontal spacing for vertical bars
-const HORIZONTAL_SPACING = 0.7;  // Vertical spacing for horizontal bars
 const LEFT_EDGE = -3;            // Left edge for horizontal bars
-const BASE_Y_OFFSET = 1.0;       // Base Y position for bar center
 
 // Carousel constants (vertical Y-axis scrolling)
 const CAROUSEL_Y_SPACING = 0.6;   // Y spacing between carousel items
@@ -160,6 +158,7 @@ export function SelectionView({ onNodeSelect }: SelectionViewProps) {
           carouselIndex: index,
           carouselDistance: 0,
           carouselOpacity: 1,
+          carouselScale: 1,
         };
       });
     }

@@ -5,12 +5,20 @@
  * - Current level in hierarchy
  * - Selection path (breadcrumb trail)
  * - Animation phases
+ * - Particle visualization mode
  */
 
 import { create } from 'zustand';
 import type { DataNode, NavigationState, AnimationPhase, ViewMode } from '../types';
 
+/**
+ * Visualization mode determines how levels 1-3 are rendered
+ */
+export type VisualizationMode = 'bars' | 'particles';
+
 interface NavigationStore extends NavigationState {
+  // Visualization mode
+  visualizationMode: VisualizationMode;
   // Actions
   initialize: (rootNodes: DataNode[]) => void;
   selectNode: (nodeId: string) => void;
@@ -31,9 +39,11 @@ interface NavigationStore extends NavigationState {
   // Carousel scrolling
   setCarouselOffset: (offset: number) => void;
   scrollCarousel: (delta: number) => void;
+  // Visualization mode
+  setVisualizationMode: (mode: VisualizationMode) => void;
 }
 
-const initialState: NavigationState = {
+const initialState: NavigationState & { visualizationMode: VisualizationMode } = {
   rootNodes: [],
   currentLevel: 0,
   selectionPath: [],
@@ -47,6 +57,7 @@ const initialState: NavigationState = {
   selectedContributionId: null,
   focusedNodeIndex: 0,
   carouselOffset: 0,
+  visualizationMode: 'particles', // Default to particle visualization
 };
 
 export const useNavigationStore = create<NavigationStore>((set, get) => ({
@@ -267,6 +278,10 @@ export const useNavigationStore = create<NavigationStore>((set, get) => ({
       });
     }
   },
+
+  setVisualizationMode: (mode) => {
+    set({ visualizationMode: mode });
+  },
 }));
 
 // Selectors
@@ -294,3 +309,5 @@ export const useFocusedNodeIndex = () =>
   useNavigationStore((s) => s.focusedNodeIndex);
 export const useCarouselOffset = () =>
   useNavigationStore((s) => s.carouselOffset);
+export const useVisualizationMode = () =>
+  useNavigationStore((s) => s.visualizationMode);

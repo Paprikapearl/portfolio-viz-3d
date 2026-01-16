@@ -431,7 +431,7 @@ function ScanLines({ width, height }: { width: number; height: number }) {
 
 function HolographicInfoPanel({ node, instrument, position, onClose }: HolographicInfoPanelProps) {
   // Animate panel appearance - dramatic entry
-  const { scale, opacity, rotY } = useSpring({
+  const { scale, opacity: _opacity, rotY } = useSpring({
     scale: 1,
     opacity: 1,
     rotY: 0,
@@ -453,8 +453,26 @@ function HolographicInfoPanel({ node, instrument, position, onClose }: Holograph
     return value >= 0 ? `+${pct}%` : `${pct}%`;
   };
 
-  const description = node.metadata?.description as string | undefined;
-  const methodology = node.metadata?.methodology as string | undefined;
+  // Extract and type metadata values
+  const description: string | null = (() => {
+    const val = node.metadata?.description;
+    return typeof val === 'string' && val.length > 0 ? val : null;
+  })();
+
+  const methodology: string | null = (() => {
+    const val = node.metadata?.methodology;
+    return typeof val === 'string' && val.length > 0 ? val : null;
+  })();
+
+  const keyAssumptions: string | null = (() => {
+    const val = node.metadata?.keyAssumptions;
+    return typeof val === 'string' && val.length > 0 ? val : null;
+  })();
+
+  const limitations: string | null = (() => {
+    const val = node.metadata?.limitations;
+    return typeof val === 'string' && val.length > 0 ? val : null;
+  })();
 
   // Panel dimensions
   const panelWidth = 5;
@@ -626,7 +644,7 @@ function HolographicInfoPanel({ node, instrument, position, onClose }: Holograph
           </div>
 
           {/* Description section */}
-          {description && (
+          {description !== null ? (
             <div style={{ marginBottom: 16 }}>
               <div
                 style={{
@@ -650,10 +668,10 @@ function HolographicInfoPanel({ node, instrument, position, onClose }: Holograph
                 {description}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Methodology section */}
-          {methodology && (
+          {methodology !== null ? (
             <div
               style={{
                 background: 'rgba(0, 212, 255, 0.05)',
@@ -686,10 +704,10 @@ function HolographicInfoPanel({ node, instrument, position, onClose }: Holograph
                 {methodology}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Key Assumptions section */}
-          {node.metadata?.keyAssumptions && (
+          {keyAssumptions !== null ? (
             <div style={{ marginBottom: 16 }}>
               <div
                 style={{
@@ -710,13 +728,13 @@ function HolographicInfoPanel({ node, instrument, position, onClose }: Holograph
                   lineHeight: 1.6,
                 }}
               >
-                {String(node.metadata.keyAssumptions)}
+                {keyAssumptions}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Limitations section */}
-          {node.metadata?.limitations && (
+          {limitations !== null ? (
             <div
               style={{
                 background: 'rgba(255, 100, 100, 0.05)',
@@ -745,10 +763,10 @@ function HolographicInfoPanel({ node, instrument, position, onClose }: Holograph
                   lineHeight: 1.6,
                 }}
               >
-                {String(node.metadata.limitations)}
+                {limitations}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Additional metadata - grid of short values */}
           {node.metadata && Object.keys(node.metadata).filter(k => !['description', 'methodology', 'type', 'instrument', 'keyAssumptions', 'limitations'].includes(k)).length > 0 && (

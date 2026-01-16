@@ -3,12 +3,81 @@
  *
  * Portfolio → Asset Class → Market → Instrument → Contribution
  * Updated with rich contribution metadata for testing
+ * Now includes geographic coordinates for particle visualization
  */
 
-import type { DataNode } from '../types';
+import type { DataNode, GeographicRegion, LatLong, AssetClassType } from '../types';
 
 let idCounter = 0;
 const genId = () => `node-${++idCounter}`;
+
+/**
+ * Geographic coordinates for each region
+ */
+const REGION_GEO_DATA: Record<string, { region: GeographicRegion; latLong: LatLong }> = {
+  'US Equity': { region: 'north-america', latLong: { lat: 40, long: -100 } },
+  'European Equity': { region: 'europe', latLong: { lat: 50, long: 10 } },
+  'Asian Equity': { region: 'asia', latLong: { lat: 35, long: 120 } },
+  'Emerging Markets': { region: 'emerging-markets', latLong: { lat: -15, long: 30 } },
+  'Government Bonds': { region: 'global', latLong: { lat: 45, long: -50 } },
+  'Corporate Bonds': { region: 'global', latLong: { lat: 40, long: 0 } },
+  'Commodities': { region: 'global', latLong: { lat: 20, long: -60 } },
+  'Real Assets': { region: 'global', latLong: { lat: 30, long: 90 } },
+};
+
+/**
+ * Individual instrument coordinates (scattered around their region center)
+ */
+const INSTRUMENT_COORDINATES: Record<string, LatLong> = {
+  // US Equity - scattered across US
+  'AAPL': { lat: 37.33, long: -122.03 },    // Cupertino, CA
+  'MSFT': { lat: 47.64, long: -122.13 },    // Redmond, WA
+  'GOOGL': { lat: 37.42, long: -122.08 },   // Mountain View, CA
+  'AMZN': { lat: 47.62, long: -122.33 },    // Seattle, WA
+  'NVDA': { lat: 37.37, long: -121.99 },    // Santa Clara, CA
+
+  // European Equity
+  'NESN': { lat: 46.47, long: 6.51 },       // Vevey, Switzerland
+  'ASML': { lat: 51.42, long: 5.45 },       // Veldhoven, Netherlands
+  'ROG': { lat: 47.56, long: 7.59 },        // Basel, Switzerland
+  'NOVN': { lat: 47.56, long: 7.58 },       // Basel, Switzerland
+
+  // Asian Equity
+  'TSM': { lat: 24.78, long: 121.02 },      // Hsinchu, Taiwan
+  'BABA': { lat: 30.27, long: 120.15 },     // Hangzhou, China
+  'TCEHY': { lat: 22.54, long: 114.06 },    // Shenzhen, China
+  'SONY': { lat: 35.65, long: 139.74 },     // Tokyo, Japan
+
+  // Emerging Markets
+  'VALE': { lat: -20.32, long: -43.13 },    // Rio de Janeiro, Brazil
+  'PBR': { lat: -22.91, long: -43.17 },     // Rio de Janeiro, Brazil
+  'INFY': { lat: 12.97, long: 77.59 },      // Bangalore, India
+
+  // Bonds (positions spread for visibility)
+  'UST10Y': { lat: 38.89, long: -77.03 },   // Washington DC
+  'BUND10Y': { lat: 50.11, long: 8.68 },    // Frankfurt, Germany
+  'JGB10Y': { lat: 35.68, long: 139.75 },   // Tokyo, Japan
+  'LQD': { lat: 40.71, long: -74.01 },      // New York
+  'HYG': { lat: 41.88, long: -87.63 },      // Chicago
+  'EMB': { lat: 40.73, long: -73.99 },      // New York
+
+  // Commodities & Real Assets
+  'GLD': { lat: 51.51, long: -0.13 },       // London (gold trading)
+  'SLV': { lat: 51.51, long: -0.12 },       // London
+  'CL': { lat: 29.76, long: -95.37 },       // Houston (oil)
+  'VNQ': { lat: 40.75, long: -73.99 },      // New York
+  'VNQI': { lat: 48.86, long: 2.35 },       // Paris
+  'WOOD': { lat: 45.52, long: -122.68 },    // Portland, OR
+};
+
+/**
+ * Map asset class names to types
+ */
+const ASSET_CLASS_MAP: Record<string, AssetClassType> = {
+  'Equities': 'equities',
+  'Fixed Income': 'fixed-income',
+  'Alternatives': 'alternatives',
+};
 
 // Contribution model descriptions - extended with rich metadata for testing
 interface ContributionModelData {
@@ -160,7 +229,7 @@ function generateContributions(instrumentReturn: number, instrumentName: string)
 /**
  * Generate instruments for a market
  */
-function generateInstruments(market: string, baseReturn: number): DataNode[] {
+function generateInstruments(market: string, baseReturn: number, assetClass: string): DataNode[] {
   const instrumentsByMarket: Record<string, Array<{ ticker: string; name: string }>> = {
     'US Equity': [
       { ticker: 'AAPL', name: 'Apple Inc.' },
@@ -214,10 +283,18 @@ function generateInstruments(market: string, baseReturn: number): DataNode[] {
   ];
 
   const count = instruments.length;
+  const regionData = REGION_GEO_DATA[market] || { region: 'unknown' as GeographicRegion, latLong: { lat: 0, long: 0 } };
+
   return instruments.map((inst) => {
     const variance = (Math.random() - 0.5) * 0.06;
     const instReturn = baseReturn + variance;
     const weight = 1 / count;
+
+    // Get instrument-specific coordinates or use region default with small offset
+    const instLatLong = INSTRUMENT_COORDINATES[inst.ticker] || {
+      lat: regionData.latLong.lat + (Math.random() - 0.5) * 10,
+      long: regionData.latLong.long + (Math.random() - 0.5) * 10,
+    };
 
     return {
       id: genId(),
@@ -225,6 +302,9 @@ function generateInstruments(market: string, baseReturn: number): DataNode[] {
       shortLabel: inst.ticker,
       value: instReturn,
       weight,
+      region: regionData.region,
+      latLong: instLatLong,
+      assetClassType: ASSET_CLASS_MAP[assetClass] || 'equities',
       children: generateContributions(instReturn, inst.name),
       metadata: {
         type: 'instrument',
@@ -264,6 +344,7 @@ function generateMarkets(assetClass: string, baseReturn: number): DataNode[] {
   return markets.map((mkt) => {
     const variance = (Math.random() - 0.5) * 0.02;
     const mktReturn = baseReturn + variance;
+    const regionData = REGION_GEO_DATA[mkt.name] || { region: 'unknown' as GeographicRegion, latLong: { lat: 0, long: 0 } };
 
     return {
       id: genId(),
@@ -271,7 +352,10 @@ function generateMarkets(assetClass: string, baseReturn: number): DataNode[] {
       shortLabel: mkt.name.split(' ')[0],
       value: mktReturn,
       weight: mkt.weight,
-      children: generateInstruments(mkt.name, mktReturn),
+      region: regionData.region,
+      latLong: regionData.latLong,
+      assetClassType: ASSET_CLASS_MAP[assetClass] || 'equities',
+      children: generateInstruments(mkt.name, mktReturn, assetClass),
       metadata: { type: 'market' },
     };
   });
@@ -296,6 +380,7 @@ function generateAssetClasses(portfolioReturn: number): DataNode[] {
       shortLabel: ac.name.substring(0, 3).toUpperCase(),
       value: classReturn,
       weight: ac.weight,
+      assetClassType: ASSET_CLASS_MAP[ac.name] || 'equities',
       children: generateMarkets(ac.name, classReturn),
       metadata: { type: 'assetClass' },
     };
