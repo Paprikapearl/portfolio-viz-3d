@@ -8,10 +8,11 @@
  * - Camera animates to new position after each selection
  */
 
-import { Suspense, useRef, useMemo } from 'react';
+import { Suspense, useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
+import { PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import { useSpring } from '@react-spring/three';
+import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import * as THREE from 'three';
 import type { DataNode, HierarchyConfig } from '../types';
 import { useNavigationStore, useVisualizationMode } from '../store';
@@ -30,11 +31,14 @@ const CAMERA_POSITIONS = {
   contribution: { position: [1.5, 2.5, 9], lookAt: [0, 1.8, 0] },
   // Exploded view: Centered, looking at contribution blocks
   exploded: { position: [0, 2.5, 7], lookAt: [0, 2.5, 0] },
-  // Particle visualization camera positions
-  galaxy: { position: [0, 3, 15], lookAt: [0, 1, 0] },
-  globe: { position: [0, 2, 8], lookAt: [0, 1.5, 0] },
-  nebula: { position: [2, 1.5, 6], lookAt: [0, 1.5, 0] },
+  // Particle visualization camera positions - further out for larger globe
+  galaxy: { position: [0, 5, 22], lookAt: [0, 1.5, 0] },
+  globe: { position: [0, 4, 18], lookAt: [0, 1.5, 0] },  // Even further out for bigger globe
+  nebula: { position: [4, 3, 14], lookAt: [0, 1.5, 0] },
 } as const;
+
+// Scene center for orbit controls
+const SCENE_CENTER = new THREE.Vector3(0, 1.5, 0);
 
 interface StageProps {
   data: DataNode[];
@@ -45,15 +49,17 @@ interface StageProps {
 }
 
 /**
- * Animated camera that smoothly transitions between positions
+ * Animated camera with orbit controls for particle visualization
  */
-function AnimatedCamera() {
+function AnimatedCamera({ enableOrbitControls }: { enableOrbitControls: boolean }) {
   const cameraRef = useRef<THREE.PerspectiveCamera>(null);
+  const controlsRef = useRef<OrbitControlsType>(null);
   const currentLevel = useNavigationStore((s) => s.currentLevel);
   const viewMode = useNavigationStore((s) => s.viewMode);
   const explodedInstrumentId = useNavigationStore((s) => s.explodedInstrumentId);
   const visualizationMode = useVisualizationMode();
   const formationState = useFormationState();
+  const prevFormationRef = useRef(formationState.currentFormation);
 
   // Determine target camera state based on level, view mode, and visualization mode
   const targetState = useMemo(() => {
@@ -88,40 +94,64 @@ function AnimatedCamera() {
     return CAMERA_POSITIONS.drilled;
   }, [currentLevel, viewMode, explodedInstrumentId, visualizationMode, formationState.currentFormation]);
 
-  // Animate camera position
-  const { posX, posY, posZ, lookX, lookY, lookZ } = useSpring({
+  // Animate camera position (only when orbit controls are disabled or formation changes)
+  const { posX, posY, posZ } = useSpring({
     posX: targetState.position[0],
     posY: targetState.position[1],
     posZ: targetState.position[2],
-    lookX: targetState.lookAt[0],
-    lookY: targetState.lookAt[1],
-    lookZ: targetState.lookAt[2],
     config: { mass: 1, tension: 80, friction: 20 },
   });
 
-  // Update camera each frame
+  // Reset camera position when formation changes
+  useEffect(() => {
+    if (formationState.currentFormation !== prevFormationRef.current) {
+      prevFormationRef.current = formationState.currentFormation;
+      // Reset orbit controls target and camera position on formation change
+      if (controlsRef.current && cameraRef.current) {
+        controlsRef.current.target.copy(SCENE_CENTER);
+        cameraRef.current.position.set(
+          targetState.position[0],
+          targetState.position[1],
+          targetState.position[2]
+        );
+        controlsRef.current.update();
+      }
+    }
+  }, [formationState.currentFormation, targetState]);
+
+  // Update camera each frame when orbit controls are disabled
   useFrame(() => {
-    if (cameraRef.current) {
+    if (cameraRef.current && !enableOrbitControls) {
       cameraRef.current.position.set(
         posX.get(),
         posY.get(),
         posZ.get()
       );
-      cameraRef.current.lookAt(
-        lookX.get(),
-        lookY.get(),
-        lookZ.get()
-      );
+      cameraRef.current.lookAt(SCENE_CENTER);
     }
   });
 
   return (
-    <PerspectiveCamera
-      ref={cameraRef}
-      makeDefault
-      position={[targetState.position[0], targetState.position[1], targetState.position[2]]}
-      fov={50}
-    />
+    <>
+      <PerspectiveCamera
+        ref={cameraRef}
+        makeDefault
+        position={[targetState.position[0], targetState.position[1], targetState.position[2]]}
+        fov={50}
+      />
+      {enableOrbitControls && (
+        <OrbitControls
+          ref={controlsRef}
+          target={SCENE_CENTER}
+          enablePan={false}
+          enableZoom={true}
+          minDistance={5}
+          maxDistance={30}
+          minPolarAngle={Math.PI * 0.1}
+          maxPolarAngle={Math.PI * 0.9}
+        />
+      )}
+    </>
   );
 }
 
@@ -149,8 +179,8 @@ function Scene({
 
   return (
     <>
-      {/* Animated camera - smoothly transitions after each selection */}
-      <AnimatedCamera />
+      {/* Animated camera with orbit controls for particle mode */}
+      <AnimatedCamera enableOrbitControls={showParticles} />
 
       {/* Lighting - clean, even */}
       <ambientLight intensity={0.5} />
@@ -181,8 +211,8 @@ function Scene({
         />
       )}
 
-      {/* Breadcrumbs (selected parents at top) - hidden in exploded view */}
-      {!isExploded && <Breadcrumbs />}
+      {/* Breadcrumbs (selected parents at top) - hidden in particle mode and exploded view */}
+      {!isExploded && !showParticles && <Breadcrumbs />}
 
       {/* Particle visualization for levels 1-3 */}
       {showParticles && (

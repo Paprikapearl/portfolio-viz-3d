@@ -17,6 +17,8 @@ interface ContinentOutlinesProps {
   opacity?: number;
   /** Color of the outlines */
   color?: string;
+  /** Glow color for the outlines */
+  glowColor?: string;
   /** Whether to show graticule (grid) lines */
   showGraticule?: boolean;
   /** Graticule opacity */
@@ -30,17 +32,19 @@ interface ContinentOutlinesProps {
 }
 
 /**
- * Renders a single continent outline as a line loop
+ * Renders a single continent outline as a line loop with glow effect
  */
 function ContinentLine({
   coordinates,
   color,
+  glowColor,
   opacity,
   unfoldProgress,
   rotationAngle,
 }: {
   coordinates: Array<[number, number]>;
   color: string;
+  glowColor: string;
   opacity: number;
   unfoldProgress: number;
   rotationAngle: number;
@@ -79,14 +83,26 @@ function ContinentLine({
   }, [points]);
 
   return (
-    <lineLoop geometry={geometry}>
-      <lineBasicMaterial
-        color={color}
-        opacity={opacity}
-        transparent
-        linewidth={1}
-      />
-    </lineLoop>
+    <group>
+      {/* Glow layer (outer) */}
+      <lineLoop geometry={geometry}>
+        <lineBasicMaterial
+          color={glowColor}
+          opacity={opacity * 0.4}
+          transparent
+          linewidth={3}
+        />
+      </lineLoop>
+      {/* Main line (inner, brighter) */}
+      <lineLoop geometry={geometry}>
+        <lineBasicMaterial
+          color={color}
+          opacity={opacity}
+          transparent
+          linewidth={2}
+        />
+      </lineLoop>
+    </group>
   );
 }
 
@@ -183,10 +199,11 @@ function GraticuleLine({
  * Main ContinentOutlines component
  */
 export function ContinentOutlines({
-  opacity = 0.15,
-  color = '#4a5568',
+  opacity = 0.6,
+  color = '#00d4ff',
+  glowColor = '#0088aa',
   showGraticule = true,
-  graticuleOpacity = 0.08,
+  graticuleOpacity = 0.15,
   unfoldProgress = 0,
   rotationSpeed = 0.01,
   isRotating = true,
@@ -205,7 +222,7 @@ export function ContinentOutlines({
       {/* Graticule grid */}
       {showGraticule && (
         <GraticuleLines
-          color={color}
+          color={glowColor}
           opacity={graticuleOpacity}
           unfoldProgress={unfoldProgress}
           rotationAngle={rotationAngleRef.current}
@@ -218,6 +235,7 @@ export function ContinentOutlines({
           key={continent.name}
           coordinates={continent.coordinates}
           color={color}
+          glowColor={glowColor}
           opacity={opacity}
           unfoldProgress={unfoldProgress}
           rotationAngle={rotationAngleRef.current}

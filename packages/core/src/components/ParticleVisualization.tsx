@@ -240,22 +240,50 @@ export function ParticleVisualization({
     );
   }, [formationState.currentFormation, formationState.targetFormation]);
 
-  // Calculate continent opacity based on transition
+  // Calculate continent opacity based on transition (brighter base opacity)
   const continentOpacity = useMemo(() => {
+    const baseOpacity = 0.7; // Brighter for better visibility
+
     if (formationState.currentFormation === 'globe' && !formationState.isTransitioning) {
-      return 0.15;
+      return baseOpacity;
     }
 
     if (formationState.targetFormation === 'globe' && formationState.isTransitioning) {
-      return 0.15 * formationState.transitionProgress;
+      return baseOpacity * formationState.transitionProgress;
     }
 
     if (formationState.currentFormation === 'globe' && formationState.isTransitioning) {
-      return 0.15 * (1 - formationState.transitionProgress);
+      return baseOpacity * (1 - formationState.transitionProgress);
     }
 
     return 0;
   }, [formationState]);
+
+  // Determine particle filters based on current level and selection
+  const particleFilters = useMemo(() => {
+    // Level 1 (galaxy): Show all particles
+    if (currentLevel === 1) {
+      return { filterAssetClass: null, filterRegion: null };
+    }
+
+    // Level 2 (globe): Only show particles of the selected asset class
+    if (currentLevel === 2) {
+      return {
+        filterAssetClass: formationState.selectedGalaxy,
+        filterRegion: null,
+      };
+    }
+
+    // Level 3 (nebula): Only show particles of the selected region
+    if (currentLevel === 3) {
+      return {
+        filterAssetClass: formationState.selectedGalaxy,
+        filterRegion: formationState.selectedRegion,
+      };
+    }
+
+    return { filterAssetClass: null, filterRegion: null };
+  }, [currentLevel, formationState.selectedGalaxy, formationState.selectedRegion]);
 
   // Only render if we're at levels 1-3
   if (currentLevel < 1 || currentLevel > 3) {
@@ -280,6 +308,8 @@ export function ParticleVisualization({
         onParticleClick={handleParticleClick}
         showLabels={true}
         maxParticles={500}
+        filterAssetClass={particleFilters.filterAssetClass}
+        filterRegion={particleFilters.filterRegion}
       />
     </group>
   );

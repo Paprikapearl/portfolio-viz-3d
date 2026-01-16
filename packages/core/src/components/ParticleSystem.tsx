@@ -29,6 +29,10 @@ interface ParticleSystemProps {
   showLabels?: boolean;
   /** Maximum number of particles (for performance) */
   maxParticles?: number;
+  /** Filter to only show particles of this asset class */
+  filterAssetClass?: string | null;
+  /** Filter to only show particles of this region */
+  filterRegion?: string | null;
 }
 
 /**
@@ -194,6 +198,8 @@ export function ParticleSystem({
   onParticleClick,
   showLabels: _showLabels = true,
   maxParticles = 500,
+  filterAssetClass = null,
+  filterRegion = null,
 }: ParticleSystemProps) {
   const particles = useParticles();
   const formationState = useFormationState();
@@ -210,10 +216,22 @@ export function ParticleSystem({
   // Calculate positions
   const positions = useParticlePositions(particles, formationState, animationTime);
 
-  // Limit particles for performance
+  // Filter and limit particles
   const visibleParticles = useMemo(() => {
-    return particles.slice(0, maxParticles);
-  }, [particles, maxParticles]);
+    let filtered = particles;
+
+    // Filter by asset class if specified
+    if (filterAssetClass) {
+      filtered = filtered.filter(p => p.assetClass === filterAssetClass);
+    }
+
+    // Filter by region if specified
+    if (filterRegion) {
+      filtered = filtered.filter(p => p.region === filterRegion);
+    }
+
+    return filtered.slice(0, maxParticles);
+  }, [particles, maxParticles, filterAssetClass, filterRegion]);
 
   return (
     <group>
