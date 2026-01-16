@@ -82,6 +82,9 @@ export function ParticleVisualization({
   const rootNodes = useNavigationStore((s) => s.rootNodes);
   const selectNode = useNavigationStore((s) => s.selectNode);
   const explodeInstrument = useNavigationStore((s) => s.explodeInstrument);
+  const animationPhase = useNavigationStore((s) => s.animationPhase);
+  const setAnimationPhase = useNavigationStore((s) => s.setAnimationPhase);
+  const completeAnimation = useNavigationStore((s) => s.completeAnimation);
 
   // Particle store state and actions
   const particles = useParticles();
@@ -141,6 +144,25 @@ export function ParticleVisualization({
     }
   }, [currentLevel, selectionPath, selectGalaxy, selectRegion]);
 
+  // Handle navigation animation phases (same as SelectionView)
+  // This is needed to advance the navigation state machine when clicking particles
+  useEffect(() => {
+    if (animationPhase === 'selecting') {
+      const timer = setTimeout(() => setAnimationPhase('moving'), 200);
+      return () => clearTimeout(timer);
+    }
+
+    if (animationPhase === 'moving') {
+      const timer = setTimeout(() => setAnimationPhase('splitting'), 300);
+      return () => clearTimeout(timer);
+    }
+
+    if (animationPhase === 'splitting') {
+      const timer = setTimeout(() => completeAnimation(), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [animationPhase, setAnimationPhase, completeAnimation]);
+
   // Handle transition animation
   useFrame((_, delta) => {
     if (formationState.isTransitioning) {
@@ -163,7 +185,8 @@ export function ParticleVisualization({
   // Handle particle click
   const handleParticleClick = useCallback(
     (particle: typeof particles[0]) => {
-      // particle.node is available for future use in deeper drill-down
+      // Block clicks during animation
+      if (animationPhase !== 'idle') return;
 
       if (currentLevel === 1) {
         // At galaxy level, clicking a particle should drill into that asset class
@@ -198,6 +221,7 @@ export function ParticleVisualization({
       }
     },
     [
+      animationPhase,
       currentLevel,
       selectionPath,
       rootNodes,
@@ -255,7 +279,7 @@ export function ParticleVisualization({
       <ParticleSystem
         onParticleClick={handleParticleClick}
         showLabels={true}
-        maxParticles={300}
+        maxParticles={500}
       />
     </group>
   );

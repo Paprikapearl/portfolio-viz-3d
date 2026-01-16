@@ -2,8 +2,8 @@
  * Mock data generator for portfolio hierarchy
  *
  * Portfolio → Asset Class → Market → Instrument → Contribution
- * Updated with rich contribution metadata for testing
- * Now includes geographic coordinates for particle visualization
+ * Updated with ~100 instruments per portfolio for particle visualization
+ * Includes geographic coordinates for particle positioning
  */
 
 import type { DataNode, GeographicRegion, LatLong, AssetClassType } from '../types';
@@ -12,62 +12,213 @@ let idCounter = 0;
 const genId = () => `node-${++idCounter}`;
 
 /**
- * Geographic coordinates for each region
+ * Extended instrument data with geographic coordinates
  */
-const REGION_GEO_DATA: Record<string, { region: GeographicRegion; latLong: LatLong }> = {
-  'US Equity': { region: 'north-america', latLong: { lat: 40, long: -100 } },
-  'European Equity': { region: 'europe', latLong: { lat: 50, long: 10 } },
-  'Asian Equity': { region: 'asia', latLong: { lat: 35, long: 120 } },
-  'Emerging Markets': { region: 'emerging-markets', latLong: { lat: -15, long: 30 } },
-  'Government Bonds': { region: 'global', latLong: { lat: 45, long: -50 } },
-  'Corporate Bonds': { region: 'global', latLong: { lat: 40, long: 0 } },
-  'Commodities': { region: 'global', latLong: { lat: 20, long: -60 } },
-  'Real Assets': { region: 'global', latLong: { lat: 30, long: 90 } },
-};
+interface InstrumentData {
+  ticker: string;
+  name: string;
+  latLong: LatLong;
+}
 
 /**
- * Individual instrument coordinates (scattered around their region center)
+ * Comprehensive instrument lists by market
  */
-const INSTRUMENT_COORDINATES: Record<string, LatLong> = {
-  // US Equity - scattered across US
-  'AAPL': { lat: 37.33, long: -122.03 },    // Cupertino, CA
-  'MSFT': { lat: 47.64, long: -122.13 },    // Redmond, WA
-  'GOOGL': { lat: 37.42, long: -122.08 },   // Mountain View, CA
-  'AMZN': { lat: 47.62, long: -122.33 },    // Seattle, WA
-  'NVDA': { lat: 37.37, long: -121.99 },    // Santa Clara, CA
-
-  // European Equity
-  'NESN': { lat: 46.47, long: 6.51 },       // Vevey, Switzerland
-  'ASML': { lat: 51.42, long: 5.45 },       // Veldhoven, Netherlands
-  'ROG': { lat: 47.56, long: 7.59 },        // Basel, Switzerland
-  'NOVN': { lat: 47.56, long: 7.58 },       // Basel, Switzerland
-
-  // Asian Equity
-  'TSM': { lat: 24.78, long: 121.02 },      // Hsinchu, Taiwan
-  'BABA': { lat: 30.27, long: 120.15 },     // Hangzhou, China
-  'TCEHY': { lat: 22.54, long: 114.06 },    // Shenzhen, China
-  'SONY': { lat: 35.65, long: 139.74 },     // Tokyo, Japan
-
-  // Emerging Markets
-  'VALE': { lat: -20.32, long: -43.13 },    // Rio de Janeiro, Brazil
-  'PBR': { lat: -22.91, long: -43.17 },     // Rio de Janeiro, Brazil
-  'INFY': { lat: 12.97, long: 77.59 },      // Bangalore, India
-
-  // Bonds (positions spread for visibility)
-  'UST10Y': { lat: 38.89, long: -77.03 },   // Washington DC
-  'BUND10Y': { lat: 50.11, long: 8.68 },    // Frankfurt, Germany
-  'JGB10Y': { lat: 35.68, long: 139.75 },   // Tokyo, Japan
-  'LQD': { lat: 40.71, long: -74.01 },      // New York
-  'HYG': { lat: 41.88, long: -87.63 },      // Chicago
-  'EMB': { lat: 40.73, long: -73.99 },      // New York
-
-  // Commodities & Real Assets
-  'GLD': { lat: 51.51, long: -0.13 },       // London (gold trading)
-  'SLV': { lat: 51.51, long: -0.12 },       // London
-  'CL': { lat: 29.76, long: -95.37 },       // Houston (oil)
-  'VNQ': { lat: 40.75, long: -73.99 },      // New York
-  'VNQI': { lat: 48.86, long: 2.35 },       // Paris
-  'WOOD': { lat: 45.52, long: -122.68 },    // Portland, OR
+const INSTRUMENTS_BY_MARKET: Record<string, { region: GeographicRegion; instruments: InstrumentData[] }> = {
+  'US Equity': {
+    region: 'north-america',
+    instruments: [
+      // Tech
+      { ticker: 'AAPL', name: 'Apple Inc.', latLong: { lat: 37.33, long: -122.03 } },
+      { ticker: 'MSFT', name: 'Microsoft Corp.', latLong: { lat: 47.64, long: -122.13 } },
+      { ticker: 'GOOGL', name: 'Alphabet Inc.', latLong: { lat: 37.42, long: -122.08 } },
+      { ticker: 'AMZN', name: 'Amazon.com Inc.', latLong: { lat: 47.62, long: -122.33 } },
+      { ticker: 'NVDA', name: 'NVIDIA Corp.', latLong: { lat: 37.37, long: -121.99 } },
+      { ticker: 'META', name: 'Meta Platforms', latLong: { lat: 37.48, long: -122.15 } },
+      { ticker: 'TSLA', name: 'Tesla Inc.', latLong: { lat: 37.39, long: -122.03 } },
+      { ticker: 'AVGO', name: 'Broadcom Inc.', latLong: { lat: 37.40, long: -121.95 } },
+      { ticker: 'ORCL', name: 'Oracle Corp.', latLong: { lat: 37.53, long: -122.26 } },
+      { ticker: 'CRM', name: 'Salesforce Inc.', latLong: { lat: 37.79, long: -122.40 } },
+      { ticker: 'AMD', name: 'AMD Inc.', latLong: { lat: 37.38, long: -121.96 } },
+      { ticker: 'INTC', name: 'Intel Corp.', latLong: { lat: 37.39, long: -121.96 } },
+      { ticker: 'CSCO', name: 'Cisco Systems', latLong: { lat: 37.41, long: -121.95 } },
+      { ticker: 'ADBE', name: 'Adobe Inc.', latLong: { lat: 37.33, long: -121.89 } },
+      { ticker: 'NFLX', name: 'Netflix Inc.', latLong: { lat: 37.26, long: -121.95 } },
+      // Finance
+      { ticker: 'JPM', name: 'JPMorgan Chase', latLong: { lat: 40.76, long: -73.98 } },
+      { ticker: 'BAC', name: 'Bank of America', latLong: { lat: 35.23, long: -80.84 } },
+      { ticker: 'WFC', name: 'Wells Fargo', latLong: { lat: 37.79, long: -122.40 } },
+      { ticker: 'GS', name: 'Goldman Sachs', latLong: { lat: 40.71, long: -74.01 } },
+      { ticker: 'MS', name: 'Morgan Stanley', latLong: { lat: 40.76, long: -73.98 } },
+      { ticker: 'C', name: 'Citigroup', latLong: { lat: 40.72, long: -74.01 } },
+      { ticker: 'BLK', name: 'BlackRock', latLong: { lat: 40.76, long: -73.97 } },
+      { ticker: 'SCHW', name: 'Charles Schwab', latLong: { lat: 37.80, long: -122.41 } },
+      // Healthcare
+      { ticker: 'JNJ', name: 'Johnson & Johnson', latLong: { lat: 40.49, long: -74.44 } },
+      { ticker: 'UNH', name: 'UnitedHealth', latLong: { lat: 44.98, long: -93.27 } },
+      { ticker: 'PFE', name: 'Pfizer Inc.', latLong: { lat: 40.75, long: -73.97 } },
+      { ticker: 'ABBV', name: 'AbbVie Inc.', latLong: { lat: 42.28, long: -87.95 } },
+      { ticker: 'MRK', name: 'Merck & Co.', latLong: { lat: 40.79, long: -74.21 } },
+      { ticker: 'LLY', name: 'Eli Lilly', latLong: { lat: 39.77, long: -86.16 } },
+      { ticker: 'TMO', name: 'Thermo Fisher', latLong: { lat: 42.36, long: -71.06 } },
+      // Consumer
+      { ticker: 'PG', name: 'Procter & Gamble', latLong: { lat: 39.10, long: -84.51 } },
+      { ticker: 'KO', name: 'Coca-Cola Co.', latLong: { lat: 33.75, long: -84.39 } },
+      { ticker: 'PEP', name: 'PepsiCo Inc.', latLong: { lat: 41.08, long: -73.71 } },
+      { ticker: 'WMT', name: 'Walmart Inc.', latLong: { lat: 36.37, long: -94.21 } },
+      { ticker: 'HD', name: 'Home Depot', latLong: { lat: 33.76, long: -84.38 } },
+      { ticker: 'MCD', name: "McDonald's Corp.", latLong: { lat: 41.88, long: -87.63 } },
+      { ticker: 'NKE', name: 'Nike Inc.', latLong: { lat: 45.51, long: -122.80 } },
+      { ticker: 'COST', name: 'Costco Wholesale', latLong: { lat: 47.58, long: -122.15 } },
+    ],
+  },
+  'European Equity': {
+    region: 'europe',
+    instruments: [
+      // Switzerland
+      { ticker: 'NESN', name: 'Nestle SA', latLong: { lat: 46.47, long: 6.51 } },
+      { ticker: 'ROG', name: 'Roche Holding', latLong: { lat: 47.56, long: 7.59 } },
+      { ticker: 'NOVN', name: 'Novartis AG', latLong: { lat: 47.56, long: 7.58 } },
+      { ticker: 'UBSG', name: 'UBS Group', latLong: { lat: 47.37, long: 8.54 } },
+      { ticker: 'ZURN', name: 'Zurich Insurance', latLong: { lat: 47.37, long: 8.54 } },
+      // Netherlands
+      { ticker: 'ASML', name: 'ASML Holding', latLong: { lat: 51.42, long: 5.45 } },
+      { ticker: 'SHELL', name: 'Shell PLC', latLong: { lat: 52.08, long: 4.31 } },
+      { ticker: 'UNA', name: 'Unilever NV', latLong: { lat: 52.09, long: 5.12 } },
+      // Germany
+      { ticker: 'SAP', name: 'SAP SE', latLong: { lat: 49.29, long: 8.64 } },
+      { ticker: 'SIE', name: 'Siemens AG', latLong: { lat: 48.14, long: 11.58 } },
+      { ticker: 'ALV', name: 'Allianz SE', latLong: { lat: 48.14, long: 11.58 } },
+      { ticker: 'DTE', name: 'Deutsche Telekom', latLong: { lat: 50.94, long: 6.96 } },
+      { ticker: 'MBG', name: 'Mercedes-Benz', latLong: { lat: 48.78, long: 9.18 } },
+      { ticker: 'BMW', name: 'BMW AG', latLong: { lat: 48.18, long: 11.56 } },
+      { ticker: 'VOW', name: 'Volkswagen AG', latLong: { lat: 52.43, long: 10.79 } },
+      // France
+      { ticker: 'MC', name: 'LVMH', latLong: { lat: 48.87, long: 2.33 } },
+      { ticker: 'OR', name: "L'Oreal SA", latLong: { lat: 48.88, long: 2.30 } },
+      { ticker: 'TTE', name: 'TotalEnergies', latLong: { lat: 48.90, long: 2.24 } },
+      { ticker: 'SAN', name: 'Sanofi SA', latLong: { lat: 48.84, long: 2.27 } },
+      { ticker: 'AIR', name: 'Airbus SE', latLong: { lat: 43.61, long: 1.44 } },
+      // UK
+      { ticker: 'AZN', name: 'AstraZeneca', latLong: { lat: 51.51, long: -0.13 } },
+      { ticker: 'HSBA', name: 'HSBC Holdings', latLong: { lat: 51.51, long: -0.08 } },
+      { ticker: 'ULVR', name: 'Unilever PLC', latLong: { lat: 51.51, long: -0.10 } },
+      { ticker: 'GSK', name: 'GSK PLC', latLong: { lat: 51.50, long: -0.17 } },
+      { ticker: 'BP', name: 'BP PLC', latLong: { lat: 51.51, long: -0.07 } },
+      { ticker: 'RIO', name: 'Rio Tinto', latLong: { lat: 51.51, long: -0.13 } },
+    ],
+  },
+  'Asian Equity': {
+    region: 'asia',
+    instruments: [
+      // Taiwan
+      { ticker: 'TSM', name: 'Taiwan Semiconductor', latLong: { lat: 24.78, long: 121.02 } },
+      { ticker: 'HON', name: 'Hon Hai Precision', latLong: { lat: 25.04, long: 121.53 } },
+      { ticker: 'MEDI', name: 'MediaTek Inc.', latLong: { lat: 24.78, long: 121.00 } },
+      // China
+      { ticker: 'BABA', name: 'Alibaba Group', latLong: { lat: 30.27, long: 120.15 } },
+      { ticker: 'TCEHY', name: 'Tencent Holdings', latLong: { lat: 22.54, long: 114.06 } },
+      { ticker: 'JD', name: 'JD.com Inc.', latLong: { lat: 39.91, long: 116.40 } },
+      { ticker: 'PDD', name: 'PDD Holdings', latLong: { lat: 31.23, long: 121.47 } },
+      { ticker: 'BIDU', name: 'Baidu Inc.', latLong: { lat: 39.98, long: 116.31 } },
+      { ticker: 'NIO', name: 'NIO Inc.', latLong: { lat: 31.23, long: 121.47 } },
+      { ticker: 'XPEV', name: 'XPeng Inc.', latLong: { lat: 23.13, long: 113.26 } },
+      // Japan
+      { ticker: 'SONY', name: 'Sony Group', latLong: { lat: 35.65, long: 139.74 } },
+      { ticker: 'TM', name: 'Toyota Motor', latLong: { lat: 35.05, long: 137.16 } },
+      { ticker: 'NTT', name: 'Nippon Telegraph', latLong: { lat: 35.68, long: 139.69 } },
+      { ticker: 'MUFG', name: 'Mitsubishi UFJ', latLong: { lat: 35.67, long: 139.77 } },
+      { ticker: 'HMC', name: 'Honda Motor', latLong: { lat: 35.66, long: 139.75 } },
+      { ticker: 'SNE', name: 'Sony Entertainment', latLong: { lat: 35.65, long: 139.74 } },
+      // Korea
+      { ticker: 'SSNL', name: 'Samsung Electronics', latLong: { lat: 37.24, long: 127.05 } },
+      { ticker: 'HYMTF', name: 'Hyundai Motor', latLong: { lat: 37.55, long: 127.05 } },
+      { ticker: 'SKH', name: 'SK Hynix', latLong: { lat: 37.24, long: 127.05 } },
+    ],
+  },
+  'Emerging Markets': {
+    region: 'emerging-markets',
+    instruments: [
+      // Brazil
+      { ticker: 'VALE', name: 'Vale SA', latLong: { lat: -20.32, long: -43.13 } },
+      { ticker: 'PBR', name: 'Petrobras', latLong: { lat: -22.91, long: -43.17 } },
+      { ticker: 'ITUB', name: 'Itau Unibanco', latLong: { lat: -23.55, long: -46.63 } },
+      { ticker: 'BBD', name: 'Banco Bradesco', latLong: { lat: -23.55, long: -46.63 } },
+      { ticker: 'ABEV', name: 'Ambev SA', latLong: { lat: -23.55, long: -46.63 } },
+      // India
+      { ticker: 'INFY', name: 'Infosys Ltd', latLong: { lat: 12.97, long: 77.59 } },
+      { ticker: 'TCS', name: 'Tata Consultancy', latLong: { lat: 19.08, long: 72.88 } },
+      { ticker: 'RELI', name: 'Reliance Industries', latLong: { lat: 19.08, long: 72.88 } },
+      { ticker: 'HDBK', name: 'HDFC Bank', latLong: { lat: 19.08, long: 72.88 } },
+      { ticker: 'WIPR', name: 'Wipro Ltd', latLong: { lat: 12.97, long: 77.59 } },
+      // Mexico
+      { ticker: 'AMX', name: 'America Movil', latLong: { lat: 19.43, long: -99.13 } },
+      { ticker: 'WALMEX', name: 'Walmart de Mexico', latLong: { lat: 19.43, long: -99.13 } },
+      // South Africa
+      { ticker: 'NPN', name: 'Naspers Ltd', latLong: { lat: -33.93, long: 18.42 } },
+      { ticker: 'SBKS', name: 'Standard Bank', latLong: { lat: -26.20, long: 28.04 } },
+      // Southeast Asia
+      { ticker: 'GRAB', name: 'Grab Holdings', latLong: { lat: 1.35, long: 103.82 } },
+      { ticker: 'SE', name: 'Sea Ltd', latLong: { lat: 1.29, long: 103.85 } },
+    ],
+  },
+  'Government Bonds': {
+    region: 'global',
+    instruments: [
+      { ticker: 'UST2Y', name: 'US Treasury 2Y', latLong: { lat: 38.89, long: -77.03 } },
+      { ticker: 'UST5Y', name: 'US Treasury 5Y', latLong: { lat: 38.90, long: -77.02 } },
+      { ticker: 'UST10Y', name: 'US Treasury 10Y', latLong: { lat: 38.91, long: -77.01 } },
+      { ticker: 'UST30Y', name: 'US Treasury 30Y', latLong: { lat: 38.92, long: -77.00 } },
+      { ticker: 'TIPS', name: 'Treasury Inflation', latLong: { lat: 38.88, long: -77.04 } },
+      { ticker: 'BUND2Y', name: 'German Bund 2Y', latLong: { lat: 50.11, long: 8.66 } },
+      { ticker: 'BUND10Y', name: 'German Bund 10Y', latLong: { lat: 50.11, long: 8.68 } },
+      { ticker: 'BUND30Y', name: 'German Bund 30Y', latLong: { lat: 50.11, long: 8.70 } },
+      { ticker: 'JGB5Y', name: 'Japan JGB 5Y', latLong: { lat: 35.68, long: 139.73 } },
+      { ticker: 'JGB10Y', name: 'Japan JGB 10Y', latLong: { lat: 35.68, long: 139.75 } },
+      { ticker: 'GILT10Y', name: 'UK Gilt 10Y', latLong: { lat: 51.51, long: -0.13 } },
+      { ticker: 'OAT10Y', name: 'French OAT 10Y', latLong: { lat: 48.86, long: 2.35 } },
+    ],
+  },
+  'Corporate Bonds': {
+    region: 'global',
+    instruments: [
+      { ticker: 'LQD', name: 'IG Corporate ETF', latLong: { lat: 40.71, long: -74.01 } },
+      { ticker: 'VCIT', name: 'Intermediate Corp', latLong: { lat: 40.72, long: -74.00 } },
+      { ticker: 'VCLT', name: 'Long-term Corp', latLong: { lat: 40.73, long: -73.99 } },
+      { ticker: 'HYG', name: 'High Yield ETF', latLong: { lat: 41.88, long: -87.63 } },
+      { ticker: 'JNK', name: 'SPDR High Yield', latLong: { lat: 42.36, long: -71.06 } },
+      { ticker: 'EMB', name: 'EM Bond ETF', latLong: { lat: 40.74, long: -73.99 } },
+      { ticker: 'BNDX', name: 'Intl Bond ETF', latLong: { lat: 40.75, long: -73.98 } },
+      { ticker: 'VWOB', name: 'EM Govt Bond', latLong: { lat: 40.76, long: -73.97 } },
+    ],
+  },
+  'Commodities': {
+    region: 'global',
+    instruments: [
+      { ticker: 'GLD', name: 'Gold', latLong: { lat: 51.51, long: -0.13 } },
+      { ticker: 'SLV', name: 'Silver', latLong: { lat: 51.51, long: -0.12 } },
+      { ticker: 'PPLT', name: 'Platinum', latLong: { lat: -26.20, long: 28.04 } },
+      { ticker: 'CL', name: 'Crude Oil WTI', latLong: { lat: 29.76, long: -95.37 } },
+      { ticker: 'BRN', name: 'Brent Crude', latLong: { lat: 51.51, long: -0.13 } },
+      { ticker: 'NG', name: 'Natural Gas', latLong: { lat: 29.76, long: -95.36 } },
+      { ticker: 'CORN', name: 'Corn Futures', latLong: { lat: 41.88, long: -87.63 } },
+      { ticker: 'WEAT', name: 'Wheat Futures', latLong: { lat: 41.88, long: -87.62 } },
+      { ticker: 'SOYB', name: 'Soybean', latLong: { lat: 41.88, long: -87.61 } },
+      { ticker: 'CPER', name: 'Copper', latLong: { lat: 51.51, long: -0.11 } },
+    ],
+  },
+  'Real Assets': {
+    region: 'global',
+    instruments: [
+      { ticker: 'VNQ', name: 'US REITs', latLong: { lat: 40.75, long: -73.99 } },
+      { ticker: 'VNQI', name: 'Intl REITs', latLong: { lat: 48.86, long: 2.35 } },
+      { ticker: 'XLRE', name: 'Real Estate Select', latLong: { lat: 40.76, long: -73.98 } },
+      { ticker: 'IYR', name: 'iShares US Real Est', latLong: { lat: 40.77, long: -73.97 } },
+      { ticker: 'WOOD', name: 'Timber', latLong: { lat: 45.52, long: -122.68 } },
+      { ticker: 'LAND', name: 'Farmland Partners', latLong: { lat: 39.74, long: -104.99 } },
+      { ticker: 'INFRA', name: 'Infrastructure', latLong: { lat: 40.78, long: -73.96 } },
+      { ticker: 'PAVE', name: 'US Infrastructure', latLong: { lat: 40.79, long: -73.95 } },
+    ],
+  },
 };
 
 /**
@@ -79,106 +230,57 @@ const ASSET_CLASS_MAP: Record<string, AssetClassType> = {
   'Alternatives': 'alternatives',
 };
 
-// Contribution model descriptions - extended with rich metadata for testing
+// Contribution model descriptions
 interface ContributionModelData {
   description: string;
   methodology: string;
-  dataSource: string;
-  updateFrequency: string;
   confidenceLevel: number;
-  historicalAccuracy: number;
-  lookbackPeriod: string;
-  riskFactors: string;
-  modelVersion: string;
-  lastCalibration: string;
   keyAssumptions: string;
   limitations: string;
 }
 
 const CONTRIBUTION_MODELS: Record<string, ContributionModelData> = {
   'Equilibrium Return': {
-    description: 'Market-implied expected return based on market capitalization weights and global risk premia. This represents the baseline expected return that would prevail in a world where all investors hold the market portfolio and have homogeneous expectations about future returns. The equilibrium return serves as the anchor for our return forecasting framework.',
-    methodology: 'Derived from reverse optimization of the global market portfolio using the Capital Asset Pricing Model (CAPM) framework. We start with observed market capitalizations, assume markets are in equilibrium, and back out the implied expected returns that would make investors indifferent between all assets at current prices. Risk aversion parameters are calibrated quarterly using survey data and realized market behavior.',
-    dataSource: 'Bloomberg, MSCI, internal risk models',
-    updateFrequency: 'Daily recalculation, weekly publication',
+    description: 'Market-implied expected return based on market cap weights and global risk premia.',
+    methodology: 'Derived from reverse optimization of the global market portfolio using CAPM.',
     confidenceLevel: 0.85,
-    historicalAccuracy: 0.72,
-    lookbackPeriod: '10 years rolling',
-    riskFactors: 'Market beta, size, value, momentum, quality',
-    modelVersion: '3.2.1',
-    lastCalibration: '2024-Q4',
-    keyAssumptions: 'Markets are mean-variance efficient; investors have quadratic utility; transaction costs are negligible; no taxes or market frictions',
-    limitations: 'Assumes all investors are rational and have access to same information. May underperform in periods of market stress or structural change.',
+    keyAssumptions: 'Markets are mean-variance efficient; investors have quadratic utility.',
+    limitations: 'Assumes rational investors with access to same information.',
   },
   'Momentum Signal': {
-    description: 'Return contribution from price momentum factors capturing the tendency of assets that have performed well recently to continue performing well in the near future. Our momentum signal combines multiple timeframes and incorporates volatility scaling to manage the crash risk inherent in momentum strategies.',
-    methodology: 'Cross-sectional momentum ranking with volatility scaling and sector neutralization. We rank securities within each sector by their risk-adjusted returns over 3, 6, and 12 month horizons, excluding the most recent month to avoid short-term reversal effects. Positions are scaled inversely to recent realized volatility to maintain consistent risk exposure. The strategy is rebalanced monthly with 20% turnover constraints.',
-    dataSource: 'Exchange data, proprietary timing model',
-    updateFrequency: 'Daily signals, monthly rebalance',
+    description: 'Return contribution from price momentum factors capturing trend persistence.',
+    methodology: 'Cross-sectional momentum ranking with volatility scaling.',
     confidenceLevel: 0.78,
-    historicalAccuracy: 0.65,
-    lookbackPeriod: '3-12 months',
-    riskFactors: 'Time-series momentum, cross-sectional momentum, volatility',
-    modelVersion: '2.8.4',
-    lastCalibration: '2024-Q3',
-    keyAssumptions: 'Price trends persist due to underreaction to information; volatility clustering is predictable; sector effects are distinct from momentum',
-    limitations: 'Subject to momentum crashes during market reversals. Performance degraded when many investors follow similar strategies.',
+    keyAssumptions: 'Price trends persist due to underreaction to information.',
+    limitations: 'Subject to momentum crashes during market reversals.',
   },
   'Value Signal': {
-    description: 'Return contribution from valuation-based factors that identify securities trading below their intrinsic value. Our composite value score synthesizes multiple valuation metrics to create a robust assessment of relative cheapness that avoids single-metric value traps.',
-    methodology: 'Composite value score using fundamental ratios relative to sector peers and historical norms. Primary metrics include Price-to-Earnings (trailing and forward), Price-to-Book, Enterprise Value to EBITDA, and Dividend Yield. Each metric is z-scored within sector and combined using weights calibrated to maximize out-of-sample Sharpe ratio. Adjustments are made for accounting differences across regions.',
-    dataSource: 'Company filings, I/B/E/S estimates, Bloomberg',
-    updateFrequency: 'Weekly updates, quarterly deep review',
+    description: 'Return contribution from valuation-based factors identifying undervalued securities.',
+    methodology: 'Composite value score using fundamental ratios relative to peers.',
     confidenceLevel: 0.82,
-    historicalAccuracy: 0.68,
-    lookbackPeriod: '5 year normalization',
-    riskFactors: 'Book-to-market, earnings yield, dividend yield, cash flow yield',
-    modelVersion: '4.1.0',
-    lastCalibration: '2024-Q4',
-    keyAssumptions: 'Markets eventually recognize intrinsic value; accounting data reflects economic reality; sector peers are appropriate comparables',
-    limitations: 'Value stocks may remain cheap for extended periods. Accounting manipulation can distort signals. Less effective for high-growth sectors.',
+    keyAssumptions: 'Markets eventually recognize intrinsic value.',
+    limitations: 'Value stocks may remain cheap for extended periods.',
   },
   'Quality Signal': {
-    description: 'Return contribution from quality metrics that identify companies with sustainable competitive advantages, strong balance sheets, and consistent profitability. High-quality companies tend to outperform during market stress and provide smoother return streams over time.',
-    methodology: 'Multi-factor quality score emphasizing profitability, earnings stability, and financial health. Components include Return on Equity, Return on Assets, gross margin stability, earnings variability, debt-to-equity ratio, interest coverage, and Altman Z-score. Machine learning ensemble combines factors with time-varying weights based on market regime.',
-    dataSource: 'Annual reports, quarterly filings, credit ratings',
-    updateFrequency: 'Monthly recalculation',
+    description: 'Return contribution from quality metrics identifying sustainable advantages.',
+    methodology: 'Multi-factor quality score emphasizing profitability and financial health.',
     confidenceLevel: 0.80,
-    historicalAccuracy: 0.71,
-    lookbackPeriod: '3 years for stability metrics',
-    riskFactors: 'Profitability, investment, leverage, earnings quality',
-    modelVersion: '3.5.2',
-    lastCalibration: '2024-Q4',
-    keyAssumptions: 'Past profitability indicates future profitability; accounting quality metrics are predictive; market undervalues consistency',
-    limitations: 'Quality premium may be arbitraged away as factor becomes more popular. Expensive quality stocks may underperform in risk-on environments.',
+    keyAssumptions: 'Past profitability indicates future profitability.',
+    limitations: 'Quality premium may be arbitraged away over time.',
   },
   'Analyst Views': {
-    description: 'Return contribution from analyst consensus estimates and recommendation changes that capture the collective wisdom of equity research. Our model identifies persistent biases in analyst forecasts and extracts alpha from changes in sentiment rather than levels.',
-    methodology: 'Black-Litterman views derived from analyst target prices with confidence weighting based on historical forecast accuracy. We track analyst recommendation changes, earnings revision momentum, and target price movements. Analysts are weighted by their historical accuracy for each sector. Herding effects are adjusted using proprietary dispersion metrics.',
-    dataSource: 'I/B/E/S, Bloomberg, sell-side research',
-    updateFrequency: 'Daily aggregation',
+    description: 'Return contribution from analyst consensus estimates and recommendations.',
+    methodology: 'Black-Litterman views from analyst target prices with accuracy weighting.',
     confidenceLevel: 0.75,
-    historicalAccuracy: 0.62,
-    lookbackPeriod: 'Rolling 2-year analyst accuracy',
-    riskFactors: 'Earnings surprise, recommendation change, estimate revision',
-    modelVersion: '2.4.1',
-    lastCalibration: '2024-Q3',
-    keyAssumptions: 'Analyst estimates contain information not fully reflected in prices; recommendation changes are more informative than levels; accuracy varies systematically',
-    limitations: 'Analysts exhibit well-documented biases including optimism, herding, and conflicts of interest. Effectiveness varies by coverage universe.',
+    keyAssumptions: 'Analyst estimates contain information not fully reflected in prices.',
+    limitations: 'Analysts exhibit biases including optimism and herding.',
   },
   'Macro Overlay': {
-    description: 'Return adjustment based on macroeconomic regime classification and business cycle indicators. This overlay tilts portfolio exposures based on our assessment of where we are in the economic cycle and how that affects relative asset class and factor performance.',
-    methodology: 'Regime-switching model incorporating GDP growth nowcasts, inflation expectations, monetary policy stance, and credit conditions. Four regimes are identified: Expansion, Slowdown, Contraction, and Recovery. Factor and asset class tilts are calibrated based on historical performance in each regime. Transition probabilities are estimated using hidden Markov models.',
-    dataSource: 'Federal Reserve, ECB, proprietary indicators',
-    updateFrequency: 'Weekly regime assessment',
+    description: 'Return adjustment based on macroeconomic regime and business cycle.',
+    methodology: 'Regime-switching model with GDP, inflation, and monetary policy indicators.',
     confidenceLevel: 0.70,
-    historicalAccuracy: 0.58,
-    lookbackPeriod: '30 years for regime calibration',
-    riskFactors: 'Interest rate sensitivity, inflation beta, growth beta',
-    modelVersion: '1.9.3',
-    lastCalibration: '2024-Q2',
-    keyAssumptions: 'Economic regimes are identifiable in real-time; historical relationships between regimes and asset returns persist; regime transitions are gradual',
-    limitations: 'Regime identification is subject to significant uncertainty. Structural changes in the economy may invalidate historical relationships. Model performed poorly during COVID crisis.',
+    keyAssumptions: 'Economic regimes are identifiable in real-time.',
+    limitations: 'Structural changes may invalidate historical relationships.',
   },
 };
 
@@ -186,7 +288,6 @@ const CONTRIBUTION_MODELS: Record<string, ContributionModelData> = {
  * Generate contribution components for an instrument
  */
 function generateContributions(instrumentReturn: number, instrumentName: string): DataNode[] {
-  // Different contribution breakdowns based on instrument type
   const contributions = [
     { name: 'Equilibrium Return', pct: 0.35 },
     { name: 'Momentum Signal', pct: 0.20 },
@@ -211,14 +312,7 @@ function generateContributions(instrumentReturn: number, instrumentName: string)
         instrument: instrumentName,
         description: model.description,
         methodology: model.methodology,
-        dataSource: model.dataSource,
-        updateFrequency: model.updateFrequency,
         confidenceLevel: model.confidenceLevel,
-        historicalAccuracy: model.historicalAccuracy,
-        lookbackPeriod: model.lookbackPeriod,
-        riskFactors: model.riskFactors,
-        modelVersion: model.modelVersion,
-        lastCalibration: model.lastCalibration,
         keyAssumptions: model.keyAssumptions,
         limitations: model.limitations,
       },
@@ -230,71 +324,18 @@ function generateContributions(instrumentReturn: number, instrumentName: string)
  * Generate instruments for a market
  */
 function generateInstruments(market: string, baseReturn: number, assetClass: string): DataNode[] {
-  const instrumentsByMarket: Record<string, Array<{ ticker: string; name: string }>> = {
-    'US Equity': [
-      { ticker: 'AAPL', name: 'Apple Inc.' },
-      { ticker: 'MSFT', name: 'Microsoft Corp.' },
-      { ticker: 'GOOGL', name: 'Alphabet Inc.' },
-      { ticker: 'AMZN', name: 'Amazon.com Inc.' },
-      { ticker: 'NVDA', name: 'NVIDIA Corp.' },
-    ],
-    'European Equity': [
-      { ticker: 'NESN', name: 'Nestle SA' },
-      { ticker: 'ASML', name: 'ASML Holding' },
-      { ticker: 'ROG', name: 'Roche Holding' },
-      { ticker: 'NOVN', name: 'Novartis AG' },
-    ],
-    'Asian Equity': [
-      { ticker: 'TSM', name: 'Taiwan Semiconductor' },
-      { ticker: 'BABA', name: 'Alibaba Group' },
-      { ticker: 'TCEHY', name: 'Tencent Holdings' },
-      { ticker: 'SONY', name: 'Sony Group' },
-    ],
-    'Emerging Markets': [
-      { ticker: 'VALE', name: 'Vale SA' },
-      { ticker: 'PBR', name: 'Petrobras' },
-      { ticker: 'INFY', name: 'Infosys Ltd' },
-    ],
-    'Government Bonds': [
-      { ticker: 'UST10Y', name: 'US Treasury 10Y' },
-      { ticker: 'BUND10Y', name: 'German Bund 10Y' },
-      { ticker: 'JGB10Y', name: 'Japan JGB 10Y' },
-    ],
-    'Corporate Bonds': [
-      { ticker: 'LQD', name: 'Investment Grade ETF' },
-      { ticker: 'HYG', name: 'High Yield ETF' },
-      { ticker: 'EMB', name: 'EM Bond ETF' },
-    ],
-    'Commodities': [
-      { ticker: 'GLD', name: 'Gold' },
-      { ticker: 'SLV', name: 'Silver' },
-      { ticker: 'CL', name: 'Crude Oil' },
-    ],
-    'Real Assets': [
-      { ticker: 'VNQ', name: 'US REITs' },
-      { ticker: 'VNQI', name: 'Intl REITs' },
-      { ticker: 'WOOD', name: 'Timber' },
-    ],
-  };
+  const marketData = INSTRUMENTS_BY_MARKET[market];
+  if (!marketData) {
+    return [];
+  }
 
-  const instruments = instrumentsByMarket[market] || [
-    { ticker: 'INST1', name: 'Instrument 1' },
-    { ticker: 'INST2', name: 'Instrument 2' },
-  ];
-
+  const instruments = marketData.instruments;
   const count = instruments.length;
-  const regionData = REGION_GEO_DATA[market] || { region: 'unknown' as GeographicRegion, latLong: { lat: 0, long: 0 } };
 
   return instruments.map((inst) => {
-    const variance = (Math.random() - 0.5) * 0.06;
+    const variance = (Math.random() - 0.5) * 0.08;
     const instReturn = baseReturn + variance;
     const weight = 1 / count;
-
-    // Get instrument-specific coordinates or use region default with small offset
-    const instLatLong = INSTRUMENT_COORDINATES[inst.ticker] || {
-      lat: regionData.latLong.lat + (Math.random() - 0.5) * 10,
-      long: regionData.latLong.long + (Math.random() - 0.5) * 10,
-    };
 
     return {
       id: genId(),
@@ -302,8 +343,8 @@ function generateInstruments(market: string, baseReturn: number, assetClass: str
       shortLabel: inst.ticker,
       value: instReturn,
       weight,
-      region: regionData.region,
-      latLong: instLatLong,
+      region: marketData.region,
+      latLong: inst.latLong,
       assetClassType: ASSET_CLASS_MAP[assetClass] || 'equities',
       children: generateContributions(instReturn, inst.name),
       metadata: {
@@ -336,15 +377,13 @@ function generateMarkets(assetClass: string, baseReturn: number): DataNode[] {
     ],
   };
 
-  const markets = marketsByClass[assetClass] || [
-    { name: 'Market A', weight: 0.5 },
-    { name: 'Market B', weight: 0.5 },
-  ];
+  const markets = marketsByClass[assetClass] || [];
 
   return markets.map((mkt) => {
     const variance = (Math.random() - 0.5) * 0.02;
     const mktReturn = baseReturn + variance;
-    const regionData = REGION_GEO_DATA[mkt.name] || { region: 'unknown' as GeographicRegion, latLong: { lat: 0, long: 0 } };
+    const marketData = INSTRUMENTS_BY_MARKET[mkt.name];
+    const region = marketData?.region || 'global';
 
     return {
       id: genId(),
@@ -352,8 +391,8 @@ function generateMarkets(assetClass: string, baseReturn: number): DataNode[] {
       shortLabel: mkt.name.split(' ')[0],
       value: mktReturn,
       weight: mkt.weight,
-      region: regionData.region,
-      latLong: regionData.latLong,
+      region,
+      latLong: marketData?.instruments[0]?.latLong || { lat: 0, long: 0 },
       assetClassType: ASSET_CLASS_MAP[assetClass] || 'equities',
       children: generateInstruments(mkt.name, mktReturn, assetClass),
       metadata: { type: 'market' },
@@ -389,6 +428,7 @@ function generateAssetClasses(portfolioReturn: number): DataNode[] {
 
 /**
  * Generate multiple portfolios with full hierarchy
+ * Each portfolio has approximately 100 instruments
  */
 export function generatePortfolios(): DataNode[] {
   idCounter = 0;
@@ -412,8 +452,7 @@ export function generatePortfolios(): DataNode[] {
 }
 
 /**
- * Simple demo with full hierarchy
- * Portfolio → Asset Class → Market → Instrument → Contribution
+ * Simple demo with full hierarchy - ~100 instruments
  */
 export function generateSimpleDemo(): DataNode[] {
   idCounter = 0;
@@ -426,261 +465,7 @@ export function generateSimpleDemo(): DataNode[] {
       value: 0.082,
       weight: 1,
       metadata: { type: 'portfolio' },
-      children: [
-        {
-          id: genId(),
-          label: 'Equities',
-          shortLabel: 'EQU',
-          value: 0.105,
-          weight: 0.65,
-          metadata: { type: 'assetClass' },
-          children: [
-            {
-              id: genId(),
-              label: 'US Equity',
-              shortLabel: 'US',
-              value: 0.12,
-              weight: 0.55,
-              metadata: { type: 'market' },
-              children: [
-                {
-                  id: genId(),
-                  label: 'AAPL - Apple Inc.',
-                  shortLabel: 'AAPL',
-                  value: 0.15,
-                  weight: 0.25,
-                  metadata: { type: 'instrument', ticker: 'AAPL', name: 'Apple Inc.' },
-                  children: generateContributions(0.15, 'Apple Inc.'),
-                },
-                {
-                  id: genId(),
-                  label: 'MSFT - Microsoft Corp.',
-                  shortLabel: 'MSFT',
-                  value: 0.13,
-                  weight: 0.25,
-                  metadata: { type: 'instrument', ticker: 'MSFT', name: 'Microsoft Corp.' },
-                  children: generateContributions(0.13, 'Microsoft Corp.'),
-                },
-                {
-                  id: genId(),
-                  label: 'GOOGL - Alphabet Inc.',
-                  shortLabel: 'GOOGL',
-                  value: 0.11,
-                  weight: 0.20,
-                  metadata: { type: 'instrument', ticker: 'GOOGL', name: 'Alphabet Inc.' },
-                  children: generateContributions(0.11, 'Alphabet Inc.'),
-                },
-                {
-                  id: genId(),
-                  label: 'NVDA - NVIDIA Corp.',
-                  shortLabel: 'NVDA',
-                  value: 0.18,
-                  weight: 0.30,
-                  metadata: { type: 'instrument', ticker: 'NVDA', name: 'NVIDIA Corp.' },
-                  children: generateContributions(0.18, 'NVIDIA Corp.'),
-                },
-              ],
-            },
-            {
-              id: genId(),
-              label: 'European Equity',
-              shortLabel: 'EU',
-              value: 0.08,
-              weight: 0.25,
-              metadata: { type: 'market' },
-              children: [
-                {
-                  id: genId(),
-                  label: 'ASML - ASML Holding',
-                  shortLabel: 'ASML',
-                  value: 0.14,
-                  weight: 0.40,
-                  metadata: { type: 'instrument', ticker: 'ASML', name: 'ASML Holding' },
-                  children: generateContributions(0.14, 'ASML Holding'),
-                },
-                {
-                  id: genId(),
-                  label: 'NESN - Nestle SA',
-                  shortLabel: 'NESN',
-                  value: 0.05,
-                  weight: 0.35,
-                  metadata: { type: 'instrument', ticker: 'NESN', name: 'Nestle SA' },
-                  children: generateContributions(0.05, 'Nestle SA'),
-                },
-                {
-                  id: genId(),
-                  label: 'ROG - Roche Holding',
-                  shortLabel: 'ROG',
-                  value: 0.06,
-                  weight: 0.25,
-                  metadata: { type: 'instrument', ticker: 'ROG', name: 'Roche Holding' },
-                  children: generateContributions(0.06, 'Roche Holding'),
-                },
-              ],
-            },
-            {
-              id: genId(),
-              label: 'Asian Equity',
-              shortLabel: 'ASIA',
-              value: 0.095,
-              weight: 0.20,
-              metadata: { type: 'market' },
-              children: [
-                {
-                  id: genId(),
-                  label: 'TSM - Taiwan Semiconductor',
-                  shortLabel: 'TSM',
-                  value: 0.16,
-                  weight: 0.50,
-                  metadata: { type: 'instrument', ticker: 'TSM', name: 'Taiwan Semiconductor' },
-                  children: generateContributions(0.16, 'Taiwan Semiconductor'),
-                },
-                {
-                  id: genId(),
-                  label: 'SONY - Sony Group',
-                  shortLabel: 'SONY',
-                  value: 0.07,
-                  weight: 0.50,
-                  metadata: { type: 'instrument', ticker: 'SONY', name: 'Sony Group' },
-                  children: generateContributions(0.07, 'Sony Group'),
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: genId(),
-          label: 'Fixed Income',
-          shortLabel: 'FI',
-          value: 0.038,
-          weight: 0.25,
-          metadata: { type: 'assetClass' },
-          children: [
-            {
-              id: genId(),
-              label: 'Government Bonds',
-              shortLabel: 'GOVT',
-              value: 0.028,
-              weight: 0.60,
-              metadata: { type: 'market' },
-              children: [
-                {
-                  id: genId(),
-                  label: 'UST10Y - US Treasury 10Y',
-                  shortLabel: 'UST10Y',
-                  value: 0.032,
-                  weight: 0.60,
-                  metadata: { type: 'instrument', ticker: 'UST10Y', name: 'US Treasury 10Y' },
-                  children: generateContributions(0.032, 'US Treasury 10Y'),
-                },
-                {
-                  id: genId(),
-                  label: 'BUND10Y - German Bund 10Y',
-                  shortLabel: 'BUND',
-                  value: 0.022,
-                  weight: 0.40,
-                  metadata: { type: 'instrument', ticker: 'BUND10Y', name: 'German Bund 10Y' },
-                  children: generateContributions(0.022, 'German Bund 10Y'),
-                },
-              ],
-            },
-            {
-              id: genId(),
-              label: 'Corporate Bonds',
-              shortLabel: 'CORP',
-              value: 0.052,
-              weight: 0.40,
-              metadata: { type: 'market' },
-              children: [
-                {
-                  id: genId(),
-                  label: 'LQD - Investment Grade ETF',
-                  shortLabel: 'LQD',
-                  value: 0.045,
-                  weight: 0.60,
-                  metadata: { type: 'instrument', ticker: 'LQD', name: 'Investment Grade ETF' },
-                  children: generateContributions(0.045, 'Investment Grade ETF'),
-                },
-                {
-                  id: genId(),
-                  label: 'HYG - High Yield ETF',
-                  shortLabel: 'HYG',
-                  value: 0.065,
-                  weight: 0.40,
-                  metadata: { type: 'instrument', ticker: 'HYG', name: 'High Yield ETF' },
-                  children: generateContributions(0.065, 'High Yield ETF'),
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: genId(),
-          label: 'Alternatives',
-          shortLabel: 'ALT',
-          value: 0.055,
-          weight: 0.10,
-          metadata: { type: 'assetClass' },
-          children: [
-            {
-              id: genId(),
-              label: 'Commodities',
-              shortLabel: 'CMDTY',
-              value: 0.045,
-              weight: 0.50,
-              metadata: { type: 'market' },
-              children: [
-                {
-                  id: genId(),
-                  label: 'GLD - Gold',
-                  shortLabel: 'GLD',
-                  value: 0.04,
-                  weight: 0.70,
-                  metadata: { type: 'instrument', ticker: 'GLD', name: 'Gold' },
-                  children: generateContributions(0.04, 'Gold'),
-                },
-                {
-                  id: genId(),
-                  label: 'SLV - Silver',
-                  shortLabel: 'SLV',
-                  value: 0.06,
-                  weight: 0.30,
-                  metadata: { type: 'instrument', ticker: 'SLV', name: 'Silver' },
-                  children: generateContributions(0.06, 'Silver'),
-                },
-              ],
-            },
-            {
-              id: genId(),
-              label: 'Real Assets',
-              shortLabel: 'REAL',
-              value: 0.065,
-              weight: 0.50,
-              metadata: { type: 'market' },
-              children: [
-                {
-                  id: genId(),
-                  label: 'VNQ - US REITs',
-                  shortLabel: 'VNQ',
-                  value: 0.07,
-                  weight: 0.60,
-                  metadata: { type: 'instrument', ticker: 'VNQ', name: 'US REITs' },
-                  children: generateContributions(0.07, 'US REITs'),
-                },
-                {
-                  id: genId(),
-                  label: 'VNQI - Intl REITs',
-                  shortLabel: 'VNQI',
-                  value: 0.055,
-                  weight: 0.40,
-                  metadata: { type: 'instrument', ticker: 'VNQI', name: 'Intl REITs' },
-                  children: generateContributions(0.055, 'Intl REITs'),
-                },
-              ],
-            },
-          ],
-        },
-      ],
+      children: generateAssetClasses(0.082),
     },
     {
       id: genId(),

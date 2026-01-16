@@ -15,7 +15,7 @@ import {
   useContributionSpacing,
   useSelectedContributionId,
   useCarouselOffset,
-  type DataNode,
+  useVisualizationMode,
 } from '@portfolio-viz/core';
 
 // Design tokens
@@ -41,6 +41,140 @@ const colors = {
 };
 
 const levelNames = ['Portfolio', 'Asset Class', 'Market', 'Instrument', 'Contribution'];
+
+/**
+ * Contextual header that shows instructions based on current view
+ */
+function ContextualHeader() {
+  const currentLevel = useCurrentLevel();
+  const selectionPath = useSelectionPath();
+  const visualizationMode = useVisualizationMode();
+  const explodedInstrumentId = useExplodedInstrumentId();
+
+  // Get contextual title and instructions based on current state
+  const { title, subtitle, instruction } = useMemo(() => {
+    if (explodedInstrumentId) {
+      return {
+        title: 'Return Attribution',
+        subtitle: 'Exploring contribution breakdown',
+        instruction: 'Click on a block to see detailed methodology. Scroll to adjust spacing.',
+      };
+    }
+
+    switch (currentLevel) {
+      case 0:
+        return {
+          title: 'Welcome to the Allocation Explorer',
+          subtitle: 'Your portfolio universe at a glance',
+          instruction: 'Click on a portfolio to begin exploring its composition.',
+        };
+      case 1: {
+        const portfolioName = selectionPath[0]?.node.label || 'Portfolio';
+        if (visualizationMode === 'particles') {
+          return {
+            title: portfolioName,
+            subtitle: 'Asset Class Galaxy View',
+            instruction: 'Each galaxy represents an asset class. Click a cluster to drill into geographic regions.',
+          };
+        }
+        return {
+          title: portfolioName,
+          subtitle: 'Asset Class Breakdown',
+          instruction: 'Select an asset class to explore its regional allocation.',
+        };
+      }
+      case 2: {
+        const assetClassName = selectionPath[1]?.node.label || 'Asset Class';
+        if (visualizationMode === 'particles') {
+          return {
+            title: assetClassName,
+            subtitle: 'Geographic Globe View',
+            instruction: 'Particles positioned by region. Click a cluster to see individual instruments.',
+          };
+        }
+        return {
+          title: assetClassName,
+          subtitle: 'Geographic Allocation',
+          instruction: 'Select a market region to view its instruments.',
+        };
+      }
+      case 3: {
+        const marketName = selectionPath[2]?.node.label || 'Market';
+        if (visualizationMode === 'particles') {
+          return {
+            title: marketName,
+            subtitle: 'Instrument Nebula View',
+            instruction: 'Each particle is an instrument. Click to see its return attribution.',
+          };
+        }
+        return {
+          title: marketName,
+          subtitle: 'Instrument Holdings',
+          instruction: 'Select an instrument to explore its return components.',
+        };
+      }
+      default:
+        return {
+          title: 'Portfolio Explorer',
+          subtitle: '',
+          instruction: 'Navigate through the hierarchy to explore allocations.',
+        };
+    }
+  }, [currentLevel, selectionPath, visualizationMode, explodedInstrumentId]);
+
+  return (
+    <header
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 280,
+        padding: '20px 32px',
+        background: 'linear-gradient(180deg, rgba(5, 5, 16, 0.95) 0%, rgba(5, 5, 16, 0) 100%)',
+        pointerEvents: 'none',
+        zIndex: 10,
+      }}
+    >
+      <h1
+        style={{
+          fontSize: 28,
+          fontWeight: 600,
+          color: colors.text.primary,
+          margin: 0,
+          marginBottom: 4,
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+        }}
+      >
+        {title}
+      </h1>
+      {subtitle && (
+        <p
+          style={{
+            fontSize: 14,
+            color: colors.text.secondary,
+            margin: 0,
+            marginBottom: 8,
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
+      <p
+        style={{
+          fontSize: 13,
+          color: colors.text.muted,
+          margin: 0,
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontStyle: 'italic',
+        }}
+      >
+        {instruction}
+      </p>
+    </header>
+  );
+}
 
 function InfoPanel() {
   const selectionPath = useSelectionPath();
@@ -303,7 +437,7 @@ function InfoPanel() {
             Path
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {selectionPath.map((sel, i) => (
+            {selectionPath.map((sel) => (
               <button
                 key={sel.node.id}
                 onClick={() => goBack(sel.level)}
@@ -597,8 +731,12 @@ export function App() {
         display: 'flex',
         background: colors.bg.primary,
         color: colors.text.primary,
+        position: 'relative',
       }}
     >
+      {/* Contextual Header */}
+      <ContextualHeader />
+
       {/* 3D Stage */}
       <div style={{ flex: 1 }}>
         <Stage data={data} />
